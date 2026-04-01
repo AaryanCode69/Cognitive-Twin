@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -14,7 +15,7 @@ import java.util.Map;
 public class ErrorResponse {
     private String message;
     private int status;
-    private LocalDateTime timestamp;
+    private Instant timestamp;
     private String path;
     private Map<String,String> validationErrors;
 }

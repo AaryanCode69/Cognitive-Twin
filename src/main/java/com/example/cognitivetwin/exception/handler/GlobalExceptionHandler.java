@@ -1,5 +1,6 @@
 package com.example.cognitivetwin.exception.handler;
 
+import com.example.cognitivetwin.exception.custom.EmailAlreadyExistsException;
 import com.example.cognitivetwin.exception.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +32,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ErrorResponse.builder()
                         .path(request.getRequestURI())
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(Instant.now())
                         .message("Validation failed")
                         .validationErrors(errors)
                         .status(HttpStatus.BAD_REQUEST.value())
@@ -42,10 +44,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request){
         log.error("Unhandled exception occurred", ex);
         return ResponseEntity.status(500).body(ErrorResponse.builder()
-                        .timestamp(LocalDateTime.now())
+                        .timestamp(Instant.now())
                         .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .message("Something went wrong. Please try again later.")
                         .path(request.getRequestURI())
+                .build());
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyExistsException(EmailAlreadyExistsException ex, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.CONFLICT.value())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
                 .build());
     }
 
