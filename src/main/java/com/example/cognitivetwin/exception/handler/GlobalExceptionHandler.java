@@ -1,6 +1,7 @@
 package com.example.cognitivetwin.exception.handler;
 
 import com.example.cognitivetwin.exception.custom.EmailAlreadyExistsException;
+import com.example.cognitivetwin.exception.custom.ResourceNotFoundException;
 import com.example.cognitivetwin.exception.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT.value()).body(ErrorResponse.builder()
                 .timestamp(Instant.now())
                 .status(HttpStatus.CONFLICT.value())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex ,HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex ,HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build());
