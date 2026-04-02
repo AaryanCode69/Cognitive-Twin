@@ -4,10 +4,7 @@ import com.example.cognitivetwin.common.BaseEntity;
 import com.example.cognitivetwin.order.OrderStatus;
 import com.example.cognitivetwin.user.entity.UserEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -23,6 +20,7 @@ import java.util.List;
         name = "idx_orders_user_id",
         columnList = "user_id"
 ))
+@Builder()
 public class OrderEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -47,5 +45,11 @@ public class OrderEntity extends BaseEntity {
     public void removeOrderItem(OrderItem item) {
         orderItems.remove(item);
         item.setOrder(null);
+    }
+
+    public void calculateTotal() {
+        this.totalAmount = orderItems.stream()
+                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
