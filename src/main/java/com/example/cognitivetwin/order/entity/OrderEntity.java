@@ -2,6 +2,7 @@ package com.example.cognitivetwin.order.entity;
 
 import com.example.cognitivetwin.common.BaseEntity;
 import com.example.cognitivetwin.order.OrderStatus;
+import com.example.cognitivetwin.payment.entity.PaymentEntity;
 import com.example.cognitivetwin.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,6 +37,9 @@ public class OrderEntity extends BaseEntity {
 
     @Column(nullable = false,precision = 10,scale = 2)
     private BigDecimal totalAmount;
+
+    @OneToOne(mappedBy = "order",cascade = CascadeType.ALL)
+    private PaymentEntity payment;
 
     public void addOrderItem(OrderItem item) {
         orderItems.add(item);

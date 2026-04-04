@@ -40,13 +40,11 @@ public class GlobalResponseHandler implements ResponseBodyAdvice<Object> {
             status = servletResponse.getServletResponse().getStatus();
         }
 
-        ApiResponse<Object> apiResponse = ApiResponse.builder()
+        return ApiResponse.builder()
                 .timestamp(Instant.now())
                 .data(body)
                 .path(request.getURI().getPath())
                 .status(status)
                 .build();
-
-        return apiResponse;
     }
 }
