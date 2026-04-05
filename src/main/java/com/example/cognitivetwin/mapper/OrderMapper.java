@@ -3,6 +3,7 @@ package com.example.cognitivetwin.mapper;
 import com.example.cognitivetwin.order.dto.Request.OrderItemRequestDTO;
 import com.example.cognitivetwin.order.dto.Response.OrderItemResponseDTO;
 import com.example.cognitivetwin.order.dto.Response.OrderResponseDTO;
+import com.example.cognitivetwin.order.entity.OrderEntity;
 import com.example.cognitivetwin.order.entity.OrderItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -20,4 +21,6 @@ public interface OrderMapper {
     default BigDecimal calculateSubTotal(BigDecimal price, Integer quantity){
         return price.multiply(BigDecimal.valueOf(quantity));
     }
+
+    OrderResponseDTO mapOrderEntityToOrderResponse(OrderEntity orderEntity);
 }

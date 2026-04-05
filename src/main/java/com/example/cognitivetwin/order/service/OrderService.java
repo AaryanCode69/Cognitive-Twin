@@ -15,11 +15,15 @@ import com.example.cognitivetwin.user.entity.UserEntity;
 import com.example.cognitivetwin.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -66,5 +70,27 @@ public class OrderService {
                 .totalAmount(orderEntity.getTotalAmount())
                 .orderStatus(orderEntity.getOrderStatus())
                 .build();
+    }
+
+    public Page<OrderResponseDTO> getOrders(int page, int size,String sortBy,String sortDir) {
+        log.info("Fetching orders with pagination - page: {}, size: {}", page, size);
+        Page<OrderEntity> orderPage = orderRepository.findAll(PageRequest.of(page, size, Sort.by(
+                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
+                sortBy)
+        ));
+        return orderPage.map(orderMapper::mapOrderEntityToOrderResponse);
+    }
+
+    public OrderResponseDTO getOrderById(UUID id) {
+        log.info("Fetching order with ID: {}", id);
+        OrderEntity orderEntity = orderRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        return orderMapper.mapOrderEntityToOrderResponse(orderEntity);
+    }
+
+    public List<OrderResponseDTO> getOrderByUserId(UUID userId) {
+        log.info("Fetching order for user with ID: {}", userId);
+        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        List<OrderEntity> orderEntities = orderRepository.findByUser(user);
+        return orderEntities.stream().map(orderMapper::mapOrderEntityToOrderResponse).toList();
     }
 }

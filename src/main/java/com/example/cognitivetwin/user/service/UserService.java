@@ -1,7 +1,10 @@
 package com.example.cognitivetwin.user.service;
 
+import com.example.cognitivetwin.exception.custom.ResourceNotFoundException;
+import com.example.cognitivetwin.mapper.OrderMapper;
 import com.example.cognitivetwin.mapper.UserMapper;
 import com.example.cognitivetwin.exception.custom.EmailAlreadyExistsException;
+import com.example.cognitivetwin.order.dto.Response.OrderResponseDTO;
 import com.example.cognitivetwin.user.Role;
 import com.example.cognitivetwin.user.dto.Request.UserRequestDTO;
 import com.example.cognitivetwin.user.dto.Response.UserResponseDTO;
@@ -10,9 +13,15 @@ import com.example.cognitivetwin.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -42,4 +51,8 @@ public class UserService {
         return userMapper.mapUserToUserResponse(userEntity);
     }
 
+    public UserEntity getUserById(UUID id){
+        log.info("Fetching user with ID: {}", id);
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
 }

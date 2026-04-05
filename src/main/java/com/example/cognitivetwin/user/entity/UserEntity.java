@@ -2,6 +2,7 @@ package com.example.cognitivetwin.user.entity;
 
 import com.example.cognitivetwin.common.BaseEntity;
 import com.example.cognitivetwin.user.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +25,7 @@ public class UserEntity extends BaseEntity {
     @Column(unique = true,nullable = false)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
