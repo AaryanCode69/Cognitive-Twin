@@ -4,6 +4,7 @@ package com.example.cognitivetwin.order.service;
 import com.example.cognitivetwin.exception.custom.ResourceNotFoundException;
 import com.example.cognitivetwin.mapper.OrderMapper;
 import com.example.cognitivetwin.order.OrderStatus;
+import com.example.cognitivetwin.order.dto.OrderFilterDTO;
 import com.example.cognitivetwin.order.dto.Request.OrderItemRequestDTO;
 import com.example.cognitivetwin.order.dto.Request.OrderRequestDTO;
 import com.example.cognitivetwin.order.dto.Response.OrderItemResponseDTO;
@@ -11,18 +12,22 @@ import com.example.cognitivetwin.order.dto.Response.OrderResponseDTO;
 import com.example.cognitivetwin.order.entity.OrderEntity;
 import com.example.cognitivetwin.order.entity.OrderItem;
 import com.example.cognitivetwin.order.repository.OrderRepository;
+import com.example.cognitivetwin.specifications.OrderSpecification;
 import com.example.cognitivetwin.user.entity.UserEntity;
 import com.example.cognitivetwin.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -35,6 +40,9 @@ public class OrderService {
     private final UserRepository userRepository;
 
     private final OrderMapper orderMapper;
+
+    private static final Set<String> allowedSortFields = Set.of("createdAt", "totalAmount", "orderStatus");
+
 
     @Transactional()
     public OrderResponseDTO createOrder(OrderRequestDTO orderRequest){
@@ -72,12 +80,14 @@ public class OrderService {
                 .build();
     }
 
-    public Page<OrderResponseDTO> getOrders(int page, int size,String sortBy,String sortDir) {
-        log.info("Fetching orders with pagination - page: {}, size: {}", page, size);
-        Page<OrderEntity> orderPage = orderRepository.findAll(PageRequest.of(page, size, Sort.by(
-                sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC,
-                sortBy)
-        ));
+    public Page<OrderResponseDTO> getOrders(OrderFilterDTO orderFilterDTO, Pageable pageable) {
+        log.info("Fetching orders with pagination - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+        if(!allowedSortFields.contains(pageable.getSort().toString())) {
+            log.warn("Sorting not by allowed field: {}", pageable.getSort());
+            throw new IllegalArgumentException("Sorting by " + pageable.getSort() + " is not allowed");
+        }
+        Specification<OrderEntity> specification = OrderSpecification.getSpecification(orderFilterDTO);
+        Page<OrderEntity> orderPage = orderRepository.findAll(specification,pageable);
         return orderPage.map(orderMapper::mapOrderEntityToOrderResponse);
     }
 
@@ -87,10 +97,4 @@ public class OrderService {
         return orderMapper.mapOrderEntityToOrderResponse(orderEntity);
     }
 
-    public List<OrderResponseDTO> getOrderByUserId(UUID userId) {
-        log.info("Fetching order for user with ID: {}", userId);
-        UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        List<OrderEntity> orderEntities = orderRepository.findByUser(user);
-        return orderEntities.stream().map(orderMapper::mapOrderEntityToOrderResponse).toList();
-    }
 }
