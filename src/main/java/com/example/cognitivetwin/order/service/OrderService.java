@@ -1,6 +1,7 @@
 package com.example.cognitivetwin.order.service;
 
 
+import com.example.cognitivetwin.common.util.ValidateSortAttribute;
 import com.example.cognitivetwin.exception.custom.ResourceNotFoundException;
 import com.example.cognitivetwin.mapper.OrderMapper;
 import com.example.cognitivetwin.order.OrderStatus;
@@ -41,8 +42,7 @@ public class OrderService {
 
     private final OrderMapper orderMapper;
 
-    private static final Set<String> allowedSortFields = Set.of("createdAt", "totalAmount", "orderStatus");
-
+    private final ValidateSortAttribute validateSortAttribute;
 
     @Transactional()
     public OrderResponseDTO createOrder(OrderRequestDTO orderRequest){
@@ -82,7 +82,7 @@ public class OrderService {
 
     public Page<OrderResponseDTO> getOrders(OrderFilterDTO orderFilterDTO, Pageable pageable) {
         log.info("Fetching orders with pagination - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        if(!allowedSortFields.contains(pageable.getSort().toString())) {
+        if(validateSortAttribute.validateSortAttribute(pageable.getSort().toString())) {
             log.warn("Sorting not by allowed field: {}", pageable.getSort());
             throw new IllegalArgumentException("Sorting by " + pageable.getSort() + " is not allowed");
         }

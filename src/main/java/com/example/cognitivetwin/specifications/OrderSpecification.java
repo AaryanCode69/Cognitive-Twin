@@ -2,6 +2,7 @@ package com.example.cognitivetwin.specifications;
 
 import com.example.cognitivetwin.order.dto.OrderFilterDTO;
 import com.example.cognitivetwin.order.entity.OrderEntity;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -28,7 +29,7 @@ public class OrderSpecification {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("totalAmount"),orderFilterDTO.maxTotalAmount()));
             }
             if(orderFilterDTO.paymentStatus()!=null){
-                predicates.add(criteriaBuilder.equal(root.get("payment").get("paymentStatus"),orderFilterDTO.paymentStatus()));
+                predicates.add(criteriaBuilder.equal(root.join("payment", JoinType.LEFT).get("paymentStatus"),orderFilterDTO.paymentStatus()));
             }
             if(orderFilterDTO.createdBefore()!=null){
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"),orderFilterDTO.createdBefore()));

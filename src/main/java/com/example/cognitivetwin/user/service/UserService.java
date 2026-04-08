@@ -1,5 +1,6 @@
 package com.example.cognitivetwin.user.service;
 
+import com.example.cognitivetwin.common.util.ValidateSortAttribute;
 import com.example.cognitivetwin.exception.custom.ResourceNotFoundException;
 import com.example.cognitivetwin.mapper.OrderMapper;
 import com.example.cognitivetwin.mapper.UserMapper;
@@ -37,8 +38,7 @@ public class UserService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final PasswordEncoder passwordEncoder;
-
-    private static final Set<String> allowedSortFields = Set.of("createdAt", "totalAmount", "orderStatus");
+    private final ValidateSortAttribute validateSortAttribute;
 
     @Transactional
     public UserResponseDTO registerUser(UserRequestDTO req){
@@ -67,7 +67,7 @@ public class UserService {
     public Page<OrderResponseDTO> getUserOrders(UUID id, Pageable pageable) {
         log.info("Fetching all orders for user with ID: {}", id);
         UserEntity user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if(!allowedSortFields.contains(pageable.getSort().toString())) {
+        if(validateSortAttribute.validateSortAttribute(pageable.getSort().toString())) {
             log.warn("Sorting not by allowed field: {}", pageable.getSort());
             throw new IllegalArgumentException("Sorting by " + pageable.getSort() + " is not allowed");
         }
