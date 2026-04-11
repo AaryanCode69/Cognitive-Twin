@@ -1,5 +1,6 @@
 package com.example.cognitivetwin.exception.handler;
 
+import com.example.cognitivetwin.exception.custom.ConcurrentRequestException;
 import com.example.cognitivetwin.exception.custom.EmailAlreadyExistsException;
 import com.example.cognitivetwin.exception.custom.ResourceNotFoundException;
 import com.example.cognitivetwin.exception.response.ErrorResponse;
@@ -81,6 +82,17 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build());
+    }
+
+    public ResponseEntity<ErrorResponse> handleConcurrentRequestException(ConcurrentRequestException ex,HttpServletRequest request){
+        return  ResponseEntity.status(HttpStatus.CONFLICT.value()).body(
+         ErrorResponse.builder()
+                 .timestamp(Instant.now())
+                 .status(HttpStatus.CONFLICT.value())
+                 .message(ex.getMessage())
+                 .path(request.getRequestURI())
+                 .build()
+        );
     }
 
 }
