@@ -18,6 +18,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.time.Instant;
+import java.util.Arrays;
 
 
 @Aspect
@@ -41,8 +43,20 @@ public class IdempotencyAspect {
         }
 
         IdempotencyEntity existingRecord = idempotencyService.getRecord(idempotencyKey);
+        if (existingRecord!=null && existingRecord.getExpiryDate().isBefore(Instant.now())) {
+            log.info("Idempotency key expired: {}", idempotencyKey);
+            existingRecord = null;
+        }
+        Object[] args = joinPoint.getArgs();
+        Object requestBody = Arrays.stream(args)
+                .filter(arg -> !(arg instanceof HttpServletRequest))
+                .findFirst()
+                .orElse(null);
+        if (requestBody == null) {
+            throw new IllegalArgumentException("Request body required for idempotency");
+        }
 
-        String currentHash = idempotencyService.generateRequestHash(request);
+        String currentHash = idempotencyService.generateRequestHash(requestBody);
 
         if (existingRecord != null) {
             if (!existingRecord.getRequestHash().equals(currentHash)) {
@@ -50,7 +64,7 @@ public class IdempotencyAspect {
             }
 
             if (existingRecord.getIdempotencyStatus() == IdempotencyStatus.IN_PROGRESS) {
-                log.warn("Concurrent request detected for key: {}", idempotencyKey);
+                log.warn("Concurrent request detected for key={} path={}", idempotencyKey, request.getRequestURI());
                 throw new ConcurrentRequestException("Request is currently being processed. Please try again later.");
             }
 
@@ -61,7 +75,7 @@ public class IdempotencyAspect {
             }
         }
 
-        boolean locked = idempotencyService.initiateRequest(idempotencyKey,request);
+        boolean locked = idempotencyService.initiateRequest(idempotencyKey,requestBody);
         if (!locked) {
             throw new ConcurrentRequestException("Request is currently being processed. Please try again later.");
         }

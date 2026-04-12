@@ -53,19 +53,29 @@ public class IdempotencyService {
     }
 
     public IdempotencyEntity getRecord(String key){
-        return  redisService.get(generateKey(key),IdempotencyEntity.class);
+        String redisKey = generateKey(key);
+
+        IdempotencyEntity entity = redisService.get(redisKey, IdempotencyEntity.class);
+
+        if (entity != null) {
+            return entity;
+        }
+        // Fallback to DB
+        entity = idempotencyRepository.findByKey(redisKey);
+        if (entity != null) {
+            redisService.set(redisKey, entity, TTL); // warm cache 🔥
+        }
+        return entity;
     }
 
     public void completeRequest(String key,Object responseBody){
         try{
             String redisKey = generateKey(key);
             String serializedResponse = objectMapper.writeValueAsString(responseBody);
-            IdempotencyEntity entity = new IdempotencyEntity();
-            entity.setKey(redisKey);
+            IdempotencyEntity entity = idempotencyRepository.findByKey(redisKey);
             entity.setIdempotencyStatus(IdempotencyStatus.SUCCESS);
             entity.setResponse(serializedResponse);
             entity.setExpiryDate(Instant.now().plus(TTL));
-
             // Update Redis with the successful response
             redisService.set(redisKey, entity, TTL);
 
@@ -79,8 +89,10 @@ public class IdempotencyService {
     public void failRequest(String key){
         String redisKey = generateKey(key);
         IdempotencyEntity entity = idempotencyRepository.findByKey(redisKey);
-        entity.setIdempotencyStatus(IdempotencyStatus.FAILED);
-        idempotencyRepository.save(entity);
+        if (entity != null) {
+            entity.setIdempotencyStatus(IdempotencyStatus.FAILED);
+            idempotencyRepository.save(entity);
+        }
         redisService.delete(redisKey);
     }
 
