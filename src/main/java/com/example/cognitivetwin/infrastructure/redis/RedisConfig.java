@@ -10,8 +10,8 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 
@@ -27,12 +27,16 @@ public class RedisConfig {
 
     @Bean
     public RedisTemplate<String,Object> redisTemplate(RedisConnectionFactory connectionFactory){
+        RedisSerializer<String> keySerializer = RedisSerializer.string();
+        RedisSerializer<Object> valueSerializer = RedisSerializer.json();
         RedisTemplate<String,Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJacksonJsonRedisSerializer());
+        template.setKeySerializer(keySerializer);
+        template.setValueSerializer(valueSerializer);
+        template.setHashKeySerializer(keySerializer);
+        template.setHashValueSerializer(valueSerializer);
         template.afterPropertiesSet();
-        return template
+        return template;
     }
 
     @Bean
